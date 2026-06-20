@@ -1,0 +1,93 @@
+import pygame
+import random
+import math
+
+pygame.init()
+
+WIDTH, HEIGHT = 600, 400
+BLOCK_SIZE = 20
+SPEED = 10
+WIN_SCORE = 10
+
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Dragon Game")
+
+sky_bg = pygame.image.load("assets/sky_background.jpg")
+sky_bg = pygame.transform.scale(sky_bg, (WIDTH, HEIGHT))
+
+dragon_head_img = pygame.image.load("assets/dragon_head.png")
+dragon_body1_img = pygame.image.load("assets/dragon_body1.png")
+dragon_body2_img = pygame.image.load("assets/dragon_body2.png")
+dragon_tail_img = pygame.image.load("assets/dragon_tail.png")
+fireball_img = pygame.image.load("assets/fireball.png")
+
+fireball_img = pygame.transform.scale(fireball_img, (BLOCK_SIZE, BLOCK_SIZE))
+dragon_head_img = pygame.transform.scale(dragon_head_img, (BLOCK_SIZE, BLOCK_SIZE))
+dragon_body1_img = pygame.transform.scale(dragon_body1_img, (BLOCK_SIZE, BLOCK_SIZE))
+dragon_body2_img = pygame.transform.scale(dragon_body2_img, (BLOCK_SIZE, BLOCK_SIZE))
+dragon_tail_img = pygame.transform.scale(dragon_tail_img, (BLOCK_SIZE, BLOCK_SIZE))
+
+dragon = [(100, 100)]
+direction = (BLOCK_SIZE, 0)
+fireball = pygame.Rect(random.randrange(0, WIDTH, BLOCK_SIZE), random.randrange(0, HEIGHT, BLOCK_SIZE), BLOCK_SIZE, BLOCK_SIZE)
+score = 0
+
+def rotate_towards(target, source, image):
+    dx, dy = target.x - source[0], target.y - source[1]
+    angle = math.degrees(math.atan2(-dy, dx))
+    return pygame.transform.rotate(image, angle)
+
+running = True
+clock = pygame.time.Clock()
+while running:
+    screen.blit(sky_bg, (0, 0))
+    pygame.time.delay(100)
+    
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP and direction != (0, BLOCK_SIZE):
+                direction = (0, -BLOCK_SIZE)
+            elif event.key == pygame.K_DOWN and direction != (0, -BLOCK_SIZE):
+                direction = (0, BLOCK_SIZE)
+            elif event.key == pygame.K_LEFT and direction != (BLOCK_SIZE, 0):
+                direction = (-BLOCK_SIZE, 0)
+            elif event.key == pygame.K_RIGHT and direction != (-BLOCK_SIZE, 0):
+                direction = (BLOCK_SIZE, 0)
+    
+    new_head = (dragon[0][0] + direction[0], dragon[0][1] + direction[1])
+    new_head = (new_head[0] % WIDTH, new_head[1] % HEIGHT)
+    
+    if new_head in dragon:
+        print("Game Over! You lost.")
+        running = False
+    
+    if pygame.Rect(new_head[0], new_head[1], BLOCK_SIZE, BLOCK_SIZE).colliderect(fireball):
+        score += 1
+        fireball = pygame.Rect(random.randrange(0, WIDTH, BLOCK_SIZE), random.randrange(0, HEIGHT, BLOCK_SIZE), BLOCK_SIZE, BLOCK_SIZE)
+    else:
+        dragon.pop()
+    
+    dragon.insert(0, new_head)
+    
+    if score >= WIN_SCORE:
+        print("Congratulations! You win!")
+        running = False
+    
+    screen.blit(fireball_img, (fireball.x, fireball.y))
+    rotated_head = rotate_towards(fireball, dragon[0], dragon_head_img)
+    screen.blit(rotated_head, dragon[0])
+    
+    for i, segment in enumerate(dragon[1:]):
+        if i == len(dragon) - 2:
+            screen.blit(dragon_tail_img, segment)
+        elif i % 2 == 0:
+            screen.blit(dragon_body1_img, segment)
+        else:
+            screen.blit(dragon_body2_img, segment)
+    
+    pygame.display.update()
+    clock.tick(SPEED)
+
+pygame.quit()

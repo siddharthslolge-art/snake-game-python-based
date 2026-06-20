@@ -1,0 +1,71 @@
+import pygame
+import random
+
+pygame.init()
+
+WIDTH, HEIGHT = 600, 400
+BLOCK_SIZE = 20
+SPEED = 10
+WIN_SCORE = 10
+
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+BLACK = (0, 0, 0)
+
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Snake Game")
+
+snake = [(100, 100)]
+direction = (BLOCK_SIZE, 0)
+food = (random.randrange(0, WIDTH, BLOCK_SIZE), random.randrange(0, HEIGHT, BLOCK_SIZE))
+score = 0
+
+running = True
+clock = pygame.time.Clock()
+while running:
+    screen.fill(BLACK)
+    pygame.time.delay(100)
+    
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP and direction != (0, BLOCK_SIZE):
+                direction = (0, -BLOCK_SIZE)
+            elif event.key == pygame.K_DOWN and direction != (0, -BLOCK_SIZE):
+                direction = (0, BLOCK_SIZE)
+            elif event.key == pygame.K_LEFT and direction != (BLOCK_SIZE, 0):
+                direction = (-BLOCK_SIZE, 0)
+            elif event.key == pygame.K_RIGHT and direction != (-BLOCK_SIZE, 0):
+                direction = (BLOCK_SIZE, 0)
+    
+    new_head = (snake[0][0] + direction[0], snake[0][1] + direction[1])
+    new_head = (new_head[0] % WIDTH, new_head[1] % HEIGHT)
+    
+    if new_head in snake:
+        print("Game Over! You lost.")
+        running = False
+    
+    if new_head == food:
+        score += 1
+        food = (random.randrange(0, WIDTH, BLOCK_SIZE), random.randrange(0, HEIGHT, BLOCK_SIZE))
+    else:
+        snake.pop()
+    
+    snake.insert(0, new_head)
+    
+    if score >= WIN_SCORE:
+        print("Congratulations! You win!")
+        running = False
+    
+    pygame.draw.rect(screen, RED, (*food, BLOCK_SIZE, BLOCK_SIZE))
+    
+    for segment in snake:
+        pygame.draw.rect(screen, GREEN, (*segment, BLOCK_SIZE, BLOCK_SIZE))
+    
+    pygame.display.update()
+    clock.tick(SPEED)
+
+pygame.quit()
